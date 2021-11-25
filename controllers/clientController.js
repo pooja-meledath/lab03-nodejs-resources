@@ -20,16 +20,10 @@ const loginControl = (request, response) => {
                     response.end();
                 } else {
                     console.log("User from login service :" + client[0].num_client);
-                    if (username == "Pooja"){
-                        request.session.admin = true;
-                    }
-                    else{
-                        request.session.admin = false;
-                    }
                     //add to session
                     request.session.user = username;
                     request.session.num_client = client[0].num_client;
-                    
+                    request.session.admin = false;
                     response.send(`Login (${username}, ID.${client[0].num_client}) successful!`);
                     response.end();
                 }
@@ -69,20 +63,11 @@ const registerControl = (request, response) => {
 };
 
 const getClients = (request, response) => {
-    const database = require("../db/dbQuery");
-    if (request.session.admin){
-        const selectClient = "SELECT * from client"
-        database.getResult(selectClient,function(err,rows){
-            if (!err){
-                response.render('client',{client : rows})
-            }
-        }
-        }
-    //const clientServices = require('../services/clientServices');
-    //clientServices.searchService(function(err, rows) {
-        //response.render('client',{client : rows})
-    };
-
+    const clientServices = require('../services/clientServices');
+    clientServices.searchService(function(err, rows) {
+        response.render('client',{client : rows})
+    });
+};
 
 const getClientByNumclient = (request, response) => {
     const clientServices = require('../services/clientServices');
