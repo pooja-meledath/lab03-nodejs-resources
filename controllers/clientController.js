@@ -1,3 +1,4 @@
+const {Client} = require('../models/entities')
 const loginControl = (request, response) => {
     const clientServices = require('../services/clientServices');
 
@@ -19,10 +20,16 @@ const loginControl = (request, response) => {
                     response.end();
                 } else {
                     console.log("User from login service :" + client[0].num_client);
+                    if (username == "Pooja"){
+                        request.session.admin = true;
+                    }
+                    else{
+                        request.session.admin = false;
+                    }
                     //add to session
                     request.session.user = username;
                     request.session.num_client = client[0].num_client;
-                    request.session.admin = false;
+                    
                     response.send(`Login (${username}, ID.${client[0].num_client}) successful!`);
                     response.end();
                 }
@@ -36,16 +43,16 @@ const registerControl = (request, response) => {
     const clientServices = require('../services/clientServices');
 
     let username = request.body.username;
-    let password = request.body.passwsord;
+    let password = request.body.password;
     let society = request.body.society;
     let contact = request.body.contact;
-    let addres = request.body.addres;
+    let address = request.body.address;
     let zipcode = request.body.zipcode;
     let city = request.body.city;
     let phone = request.body.phone;
     let fax = request.body.fax;
     let max_outstanding = request.body.max_outstanding;
-    let client = new Client(username, password, 0, society, contact, addres, zipcode, city, phone, fax, max_outstanding);
+    let client = new Client(username, password, 0, society, contact, address, zipcode, city, phone, fax, max_outstanding);
 
     clientServices.registerService(client, function(err, exists, insertedID) {
         console.log("User from register service :" + insertedID);
@@ -62,19 +69,26 @@ const registerControl = (request, response) => {
 };
 
 const getClients = (request, response) => {
-    const clientServices = require('../services/clientServices');
-    clientServices.searchService(function(err, rows) {
-        response.json(rows);
-        response.end();
-    });
-};
+    const database = require("../db/dbQuery");
+    if (request.session.admin){
+        const selectClient = "SELECT * from client"
+        database.getResult(selectClient,function(err,rows){
+            if (!err){
+                response.render('client',{client : rows})
+            }
+        }
+        }
+    //const clientServices = require('../services/clientServices');
+    //clientServices.searchService(function(err, rows) {
+        //response.render('client',{client : rows})
+    };
+
 
 const getClientByNumclient = (request, response) => {
     const clientServices = require('../services/clientServices');
-    let num_client = request.params.num_client;
+    let num_client = request.body.num_client;
     clientServices.searchNumclientService(num_client, function(err, rows) {
-        response.json(rows);
-        response.end();
+        response.render('client',{client : rows})
     });
 };
 
