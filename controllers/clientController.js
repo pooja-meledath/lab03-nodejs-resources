@@ -1,3 +1,4 @@
+const e = require('express');
 const {Client} = require('../models/entities')
 const loginControl = (request, response) => {
     const clientServices = require('../services/clientServices');
@@ -23,10 +24,17 @@ const loginControl = (request, response) => {
                     //add to session
                     request.session.user = username;
                     request.session.num_client = client[0].num_client;
-                    request.session.admin = false;
-                    response.send(`Login (${username}, ID.${client[0].num_client}) successful!`);
-                    response.end();
+                    if (username == 'Masson' && password == 'Masson'){
+                        request.session.admin = true; 
+                        response.send(`Login (${username}, ID.${client[0].num_client}) successful!`);
+                    } else {
+                        request.session.admin = false;
+                        response.send(`Login (${username}, ID.${client[0].num_client}) successful!`);
+                    }
+                    
+                    
                 }
+                response.end();
             });
         }
     }
@@ -46,7 +54,7 @@ const registerControl = (request, response) => {
     let phone = request.body.phone;
     let fax = request.body.fax;
     let max_outstanding = request.body.max_outstanding;
-    let client = new Client(username, password, 0, society, contact, address, zipcode, city, phone, fax, max_outstanding);
+    let client = new Client(username, password, 0, society, contact, address, zipcode, city, phone, fax,0);
 
     clientServices.registerService(client, function(err, exists, insertedID) {
         console.log("User from register service :" + insertedID);
@@ -62,11 +70,16 @@ const registerControl = (request, response) => {
     });
 };
 
-const getClients = (request, response) => {
-    const clientServices = require('../services/clientServices');
+const getClient = (request, response) => {
+    if(request.session.admin==true) {
+        const clientServices = require('../services/clientServices');
     clientServices.searchService(function(err, rows) {
-        response.render('client',{client : rows})
+        response.render('client',{clients : rows})
     });
+    } else {
+        response.send("You are not an admin");
+        response.end();
+    }
 };
 
 const getClientByNumclient = (request, response) => {
@@ -80,6 +93,6 @@ const getClientByNumclient = (request, response) => {
 module.exports = {
     loginControl,
     registerControl,
-    getClients,
+    getClient,
     getClientByNumclient
 };
